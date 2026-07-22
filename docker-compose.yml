@@ -1,0 +1,115 @@
+services:
+  etcd:
+    image: bitnami/etcd:3.5
+    environment:
+      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd:2379
+      ALLOW_NONE_AUTHENTICATION: "yes"
+    ports:
+      - "2379:2379"
+    restart: unless-stopped
+    networks:
+      - ha-net
+
+  postgres-1:
+    build:
+      context: ./patroni
+    environment:
+      PATRONI_NAME: postgres-1
+      PATRONI_ETCD3_HOSTS: etcd:2379
+    depends_on:
+      - etcd
+    restart: unless-stopped
+    networks:
+      - ha-net
+
+  postgres-2:
+    build:
+      context: ./patroni
+    environment:
+      PATRONI_NAME: postgres-2
+      PATRONI_ETCD3_HOSTS: etcd:2379
+    depends_on:
+      - etcd
+    restart: unless-stopped
+    networks:
+      - ha-net
+
+  postgres-3:
+    build:
+      context: ./patroni
+    environment:
+      PATRONI_NAME: postgres-3
+      PATRONI_ETCD3_HOSTS: etcd:2379
+    depends_on:
+      - etcd
+    restart: unless-stopped
+    networks:
+      - ha-net
+
+  haproxy-db:
+    image: haproxy:lts
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+      - "7000:7000"
+    volumes:
+      - ./haproxy/haproxy-db.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - postgres-1
+      - postgres-2
+      - postgres-3
+    restart: unless-stopped
+    networks:
+      - ha-net
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - ha-net
+
+  backend-1:
+    build:
+      context: ./backend
+    environment:
+      WRITE_DSN: postgresql://postgres:postgres@haproxy-db:5000/postgres
+      READ_DSN: postgresql://postgres:postgres@haproxy-db:5001/postgres
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - haproxy-db
+      - redis
+    restart: unless-stopped
+    networks:
+      - ha-net
+
+  backend-2:
+    build:
+      context: ./backend
+    environment:
+      WRITE_DSN: postgresql://postgres:postgres@haproxy-db:5000/postgres
+      READ_DSN: postgresql://postgres:postgres@haproxy-db:5001/postgres
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - haproxy-db
+      - redis
+    restart: unless-stopped
+    networks:
+      - ha-net
+
+  haproxy-client:
+    image: haproxy:lts
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./haproxy/haproxy-client.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - backend-1
+      - backend-2
+    restart: unless-stopped
+    networks:
+      - ha-net
+
+networks:
+  ha-net:
+    driver: bridge
