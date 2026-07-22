@@ -1,13 +1,13 @@
 scope: ha-cluster
-name: ${PATRONI_NAME}
+name: patroni
 namespace: /service/
 
 restapi:
   listen: 0.0.0.0:8008
-  connect_address: ${PATRONI_NAME}:8008
+  connect_address: 127.0.0.1:8008
 
 etcd3:
-  hosts: ${PATRONI_ETCD3_HOSTS}
+  hosts: 127.0.0.1:2379
 
 bootstrap:
   dcs:
@@ -27,7 +27,7 @@ bootstrap:
 
 postgresql:
   listen: 0.0.0.0:5432
-  connect_address: ${PATRONI_NAME}:5432
+  connect_address: 127.0.0.1:5432
   data_dir: /data/postgres
   bin_dir: /usr/lib/postgresql/16/bin
   authentication:
@@ -37,5 +37,9 @@ postgresql:
     replication:
       username: replicator
       password: replicate
+  pg_hba:
+  - local all all trust
+  - host all all 0.0.0.0/0 md5
+  - host replication replicator 0.0.0.0/0 md5
   parameters:
     unix_socket_directories: /var/run/postgresql

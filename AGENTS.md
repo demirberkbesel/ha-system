@@ -18,7 +18,7 @@
 
 - Tüm servisler `ha-net` bridge network'ünde
 - Port numaraları ve servis isimleri sabit, değiştirilmemeli
-- Docker imaj isimleri: `patroni` (build), `haproxy:lts`, `redis:7-alpine`, `bitnami/etcd:3.5`
+- Docker imaj isimleri: `patroni` (build), `haproxy:lts`, `redis:7-alpine`, `quay.io/coreos/etcd:v3.5.18`
 - Her fazdan sonra kullanıcıya onay sormadan ilerlenmez (kural: grilling sonrası tüm fazlar tek seferde yapılır)
 - Hata durumunda GitHub issue açılır
 

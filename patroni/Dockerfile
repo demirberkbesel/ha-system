@@ -2,7 +2,7 @@ FROM postgres:16
 
 RUN apt-get update \
     && apt-get install -y python3 python3-pip curl jq --no-install-recommends \
-    && pip3 install --break-system-packages patroni[etcd] \
+    && pip3 install --break-system-packages psycopg2-binary patroni[etcd] \
     && rm -rf /var/lib/apt/lists/*
 
 ENV ETCDVERSION=3.5.18
