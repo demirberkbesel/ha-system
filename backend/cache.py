@@ -15,12 +15,17 @@ def _get_redis():
     global redis_client
     if redis_client is None:
         try:
-            redis_client = redis.Redis.from_url(REDIS_URL, socket_connect_timeout=2, socket_timeout=2)
+            redis_client = redis.Redis.from_url(REDIS_URL, socket_connect_timeout=0.5, socket_timeout=0.5)
             redis_client.ping()
-        except Exception as e:
-            logger.warning("redis unavailable (%s), falling back to DB", e)
+        except Exception:
+            redis_client = None
             return None
     return redis_client
+
+
+def _mark_redis_dead():
+    global redis_client
+    redis_client = None
 
 
 def cache_get(key: str):
@@ -31,8 +36,8 @@ def cache_get(key: str):
         data = r.get(key)
         if data:
             return json.loads(data)
-    except Exception as e:
-        logger.warning("cache get error: %s", e)
+    except Exception:
+        _mark_redis_dead()
     return None
 
 
@@ -42,8 +47,8 @@ def cache_set(key: str, value, ttl: int = CACHE_TTL):
         return
     try:
         r.setex(key, ttl, json.dumps(value, default=str))
-    except Exception as e:
-        logger.warning("cache set error: %s", e)
+    except Exception:
+        _mark_redis_dead()
 
 
 def cache_delete(key: str):
@@ -52,8 +57,8 @@ def cache_delete(key: str):
         return
     try:
         r.delete(key)
-    except Exception as e:
-        logger.warning("cache delete error: %s", e)
+    except Exception:
+        _mark_redis_dead()
 
 
 def invalidate_items_cache():
