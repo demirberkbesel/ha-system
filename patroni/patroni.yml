@@ -11,8 +11,8 @@ etcd3:
 
 bootstrap:
   dcs:
-    ttl: 30
-    loop_wait: 10
+    ttl: 10
+    loop_wait: 3
     retry_timeout: 10
     maximum_lag_on_failover: 1048576
     postgresql:
