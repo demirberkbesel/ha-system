@@ -12,7 +12,7 @@ logger = logging.getLogger("routes")
 router = APIRouter(prefix="/items", tags=["items"])
 
 
-def retry_on_db_error(fn, max_retries=3, delay=1.0):
+def retry_on_db_error(fn, max_retries=2, delay=0.5):
     for attempt in range(max_retries):
         try:
             return fn()

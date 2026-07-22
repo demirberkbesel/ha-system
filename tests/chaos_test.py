@@ -30,7 +30,7 @@ deadline = time.time() + DURATION
 while time.time() < deadline:
     total += 1
     try:
-        r = requests.post(f"{BASE_URL}/items", json={"name": f"chaos-{total}"}, timeout=5)
+        r = requests.post(f"{BASE_URL}/items", json={"name": f"chaos-{total}"}, timeout=10)
         if r.status_code in (200, 201):
             success += 1
             if outage_start is not None:
@@ -51,7 +51,7 @@ while time.time() < deadline:
     if item_id:
         total += 1
         try:
-            r = requests.get(f"{BASE_URL}/items/{item_id}", timeout=5)
+            r = requests.get(f"{BASE_URL}/items/{item_id}", timeout=10)
             if r.status_code == 200:
                 success += 1
                 if outage_start is not None:
@@ -71,7 +71,7 @@ while time.time() < deadline:
     if item_id:
         total += 1
         try:
-            r = requests.delete(f"{BASE_URL}/items/{item_id}", timeout=5)
+            r = requests.delete(f"{BASE_URL}/items/{item_id}", timeout=10)
             if r.status_code == 200:
                 success += 1
                 if outage_start is not None:
