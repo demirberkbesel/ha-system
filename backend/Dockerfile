@@ -9,7 +9,7 @@ RUN apt-get update \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY main.py db.py models.py cache.py routes.py .
+COPY main.py db.py models.py cache.py routes.py storage.py file_routes.py .
 
 EXPOSE 8000
 
