@@ -1,4 +1,3 @@
-import redis
 import json
 import os
 import socket
@@ -16,57 +15,35 @@ try:
 except Exception:
     pass
 
-redis_client = None
 
-
-def _get_redis():
-    global redis_client
-    if redis_client is None:
-        if _redis_ip is None:
-            return None
-        try:
-            redis_client = redis.Redis(host=_redis_ip, port=6379, socket_connect_timeout=0.5, socket_timeout=0.5)
-            redis_client.ping()
-        except Exception:
-            redis_client = None
-            return None
-    return redis_client
+def _try_redis(fn):
+    if _redis_ip is None:
+        return None
+    try:
+        import redis
+        r = redis.Redis(host=_redis_ip, port=6379, socket_connect_timeout=0.2, socket_timeout=0.2)
+        return fn(r)
+    except Exception:
+        return None
 
 
 def cache_get(key: str):
-    r = _get_redis()
-    if r is None:
-        return None
-    try:
+    def _do(r):
         data = r.get(key)
-        if data:
-            return json.loads(data)
-    except Exception:
-        global redis_client
-        redis_client = None
-    return None
+        return json.loads(data) if data else None
+    return _try_redis(_do)
 
 
 def cache_set(key: str, value, ttl: int = CACHE_TTL):
-    r = _get_redis()
-    if r is None:
-        return
-    try:
+    def _do(r):
         r.setex(key, ttl, json.dumps(value, default=str))
-    except Exception:
-        global redis_client
-        redis_client = None
+    _try_redis(_do)
 
 
 def cache_delete(key: str):
-    r = _get_redis()
-    if r is None:
-        return
-    try:
+    def _do(r):
         r.delete(key)
-    except Exception:
-        global redis_client
-        redis_client = None
+    _try_redis(_do)
 
 
 def invalidate_items_cache():
